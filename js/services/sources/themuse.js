@@ -12,8 +12,8 @@ export async function fetchTheMuseJobs() {
     const locations = Array.isArray(job.locations) ? job.locations.map(location => location.name).filter(Boolean) : [];
     const categories = Array.isArray(job.categories) ? job.categories.map(category => category.name).filter(Boolean) : [];
     const levels = Array.isArray(job.levels) ? job.levels.map(level => level.name).filter(Boolean) : [];
-    const refs = Array.isArray(job.refs) ? job.refs : [];
-    const landing = refs.find(ref => ref && ref.landing_page)?.landing_page;
+    const refs = job.refs || {};
+    const landing = Array.isArray(refs) ? refs.find(ref => ref && ref.landing_page)?.landing_page : refs.landing_page;
     const company = job.company && typeof job.company === "object" ? job.company.name : job.company;
     return normalizeJob({
       id: job.id,
