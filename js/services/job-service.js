@@ -41,6 +41,11 @@ export function normalizeJob(raw, source) {
     catch { return ""; }
   };
   const rawDate = raw.publication_date || raw.created_at || raw.date || "";
+  let published = rawDate;
+  if (rawDate !== "" && Number.isFinite(Number(rawDate))) {
+    const timestamp = Number(rawDate);
+    published = new Date(timestamp < 100000000000 ? timestamp * 1000 : timestamp).toISOString();
+  }
   return {
     id: source.toLowerCase().replace(/\s+/g, "-") + ":" + String(raw.id || raw.slug || raw.url || clean(raw.title || raw.position)),
     title: clean(raw.title || raw.position || "Вакансия без названия"),
@@ -52,7 +57,7 @@ export function normalizeJob(raw, source) {
     url: safeUrl(raw.url || raw.apply_url || raw.job_url),
     source,
     location: clean(raw.location || raw.candidate_required_location || (raw.remote ? "Удалённо" : "")),
-    published: rawDate || (raw.epoch ? new Date(Number(raw.epoch) * 1000).toISOString() : ""),
+    published: published || (raw.epoch ? new Date(Number(raw.epoch) * 1000).toISOString() : ""),
     responses: null
   };
 }
