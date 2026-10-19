@@ -1,20 +1,140 @@
 import { loadAllJobs } from "./services/job-service.js";
 
-const listings={vacancy:[],freelance:[{id:"f1",icon:"terminal",title:"Написать небольшой Python-парсер",company:"Пример заказа · Разовый проект",pay:"€100–300",desc:"Собрать открытые данные из разрешённого источника и сохранить в CSV.",tags:["Python","Парсинг","Разовый"],remote:true},{id:"f2",icon:"layout-dashboard",title:"Сделать дизайн лендинга",company:"Пример заказа · Дизайн",pay:"€150–500",desc:"Подготовить адаптивный макет посадочной страницы в Figma.",tags:["Figma","UI/UX","Проект"],remote:true},{id:"f3",icon:"file-pen-line",title:"Написать тексты для сайта",company:"Пример заказа · Контент",pay:"€50–150",desc:"Подготовить описания услуг и текстовые блоки.",tags:["Тексты","Копирайтинг","Удалённо"],remote:true}]};
-const $=id=>document.getElementById(id);
-const STORE_KEY="freelance-radar-v1";
-function loadStore(){try{return JSON.parse(localStorage.getItem(STORE_KEY)||"{}")}catch(_){return {}}}
-function saveStore(){try{localStorage.setItem(STORE_KEY,JSON.stringify({saved:[...saved],settings:{remoteOnly:$("remoteOnly").checked,ruSources:$("ruSources").checked,globalSources:$("globalSources").checked,currency:$("currency").value}}))}catch(_){toast("Браузер не разрешил сохранить настройки")}}
-const stored=loadStore();let active="vacancy",filter="all";const saved=new Set(Array.isArray(stored.saved)?stored.saved:[]);
-const prefs=stored.settings||{};
-$("remoteOnly").checked=!!prefs.remoteOnly;
-$("ruSources").checked=prefs.ruSources===undefined?true:!!prefs.ruSources;
-$("globalSources").checked=prefs.globalSources===undefined?true:!!prefs.globalSources;
-if(prefs.currency&&[...$("currency").options].some(o=>o.text===prefs.currency))$("currency").value=prefs.currency;
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function toast(s){$("toast").textContent=s;$("toast").classList.add("show");clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$("toast").classList.remove("show"),1900)}
-let remoteListings=[],jobsLoading=true,jobsError="";
-function relativePublished(value){if(!value)return "Дата публикации не указана";const d=new Date(value);if(Number.isNaN(d.getTime()))return "Дата публикации не указана";const diff=Math.max(0,Date.now()-d.getTime());const mins=Math.floor(diff/60000);if(mins<1)return "Опубликовано только что";if(mins<60)return "Опубликовано "+mins+" мин. назад";const hrs=Math.floor(mins/60);if(hrs<24)return "Опубликовано "+hrs+" ч. назад";const days=Math.floor(hrs/24);if(days<30)return "Опубликовано "+days+" дн. назад";return "Опубликовано "+d.toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:d.getFullYear()!==new Date().getFullYear()?"numeric":undefined})}function render(){let q=$("search").value.trim().toLocaleLowerCase("ru");let all=active==="vacancy"?remoteListings:listings.freelance;let data=all.filter(x=>(x.title+" "+x.company+" "+x.desc+" "+x.tags.join(" ")).toLocaleLowerCase("ru").includes(q));if(filter==="remote"||$("remoteOnly").checked)data=data.filter(x=>x.remote);if(filter==="saved")data=data.filter(x=>saved.has(x.id));$("count").textContent=data.length+" "+(data.length===1?"предложение":data.length>=2&&data.length<=4?"предложения":"предложений");$("listTitle").textContent=active==="vacancy"?"Вакансии":"Фриланс-заказы";$("listSubtitle").textContent=active==="vacancy"?"Международные удалённые вакансии":"Выбирай проекты под свои навыки";$("cards").innerHTML=data.length?data.map(x=>'<article class="job"><div class="jobtop"><div class="jobicon"><i data-lucide="'+esc(x.icon||"briefcase-business")+'"></i></div><div class="jobmain"><h3>'+esc(x.title)+'</h3><div class="company">'+esc(x.company)+'</div></div><div class="pay">'+esc(x.pay||"Зарплата не указана")+'</div></div><p class="desc">'+esc(x.desc)+'</p><div class="jobmeta"><span class="metaitem"><i data-lucide="clock-3"></i>'+esc(relativePublished(x.published))+'</span><span class="metaitem"><i data-lucide="messages-square"></i>Отклики: '+esc(x.responses==null?"нет данных":x.responses)+'</span></div><div class="tags">'+x.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join("")+'</div><div class="jobfoot"><span class="source"><i data-lucide="'+(x.url?"globe-2":"flask-conical")+'"></i> '+esc(x.source||"Демо")+(x.location?" · "+esc(x.location):"")+'</span><span style="display:flex;gap:7px;align-items:center"><button class="save '+(saved.has(x.id)?"saved":"")+'" data-save="'+esc(x.id)+'" aria-label="Сохранить в избранное"><i data-lucide="'+(saved.has(x.id)?"bookmark-check":"bookmark")+'"></i></button>'+(x.url?'<button class="save" data-open="'+esc(x.url)+'" aria-label="Открыть оригинал"><i data-lucide="external-link"></i></button>':"")+'</span></div></article>').join(""):(jobsLoading&&active==="vacancy"?'<div class="empty"><i data-lucide="loader-circle"></i><strong>Загружаю вакансии</strong>Подключаюсь к источнику…</div>': '<div class="empty"><i data-lucide="search-x"></i><strong>'+(active==="vacancy"&&jobsError?"Не удалось загрузить вакансии":"Ничего не найдено")+'</strong>'+(active==="vacancy"&&jobsError?esc(jobsError):"Измени запрос или выбери другой фильтр.")+'</div>');document.querySelectorAll(".filter").forEach(b=>b.classList.toggle("active",b.dataset.filter===filter));$("savedCount").textContent=saved.size+" в избранном";if(active==="vacancy"){$("sourceNotice").innerHTML='<i data-lucide="radio-tower"></i><div><b>'+(jobsLoading?"Подключаем источник…":jobsError?"Источник временно недоступен":("Настоящие вакансии: "+remoteListings.length))+'</b><br>'+(jobsError?"Проверь интернет и нажми «Обновить вакансии».":'Источник: Remotive · международные удалённые вакансии. Объявления могут задерживаться до 24 часов. Нажми на значок со стрелкой в карточке, чтобы открыть оригинал.')+' <button class="action" id="refreshJobs" style="margin-top:9px"><i data-lucide="refresh-cw"></i> Обновить вакансии</button></div>'}else{$("sourceNotice").innerHTML='<i data-lucide="info"></i><div><b>Фриланс-заказы пока демонстрационные.</b> Реальный источник заказов подключим следуюasync function loadRemoteJobs(){jobsLoading=true;jobsError="";render();try{const result=await loadAllJobs();remoteListings=result.jobs;jobsError=result.errors.length?result.errors.join(" · "):"";}catch(e){jobsError=e&&e.message?e.message:"Не удалось загрузить источники вакансий.";}finally{jobsLoading=false;render()}}еменно недоступен.");}finally{jobsLoading=false;render()}}
-function setKind(k){active=k;filter="all";$("search").value="";$("jobsPage").classList.add("active");$("settingsPage").classList.remove("active");document.querySelectorAll(".nav-btn").forEach(b=>{let on=b.dataset.page==="jobs"&&b.dataset.kind===k;b.classList.toggle("active",on);if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});render();window.scrollTo({top:0,behavior:"smooth"})}
-function setPage(p){$("jobsPage").classList.toggle("active",p==="jobs");$("settingsPage").classList.toggle("active",p==="settings");document.querySelectorAll(".nav-btn").forEach(b=>{let on=b.dataset.page===p&&(p==="settings"||b.dataset.kind===active);b.classList.toggle("active",on);if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});window.scrollTo({top:0,behavior:"smooth"});if(window.lucide)lucide.createIcons()}
-document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>b.dataset.page==="settings"?setPage("settings"):setKind(b.dataset.kind)));document.querySelectorAll(".filter").forEach(b=>b.addEventListener("click",()=>{filter=b.dataset.filter;render()}));$("search").addEventListener("input",render);$("cards").addEventListener("click",e=>{let open=e.target.closest("[data-open]");if(open){window.open(open.dataset.open,"_blank","noopener,noreferrer");return}let b=e.target.closest("[data-save]");if(!b)return;let id=b.dataset.save;saved.has(id)?(saved.delete(id),toast("Убрано из избранного")):(saved.add(id),toast("Сохранено в избранное"));saveStore();render()});$("remoteOnly").addEventListener("change",()=>{saveStore();render();toast($("remoteOnly").checked?"Включён фильтр удалённой работы":"Показаны все форматы")});$("ruSources").addEventListener("change",()=>{saveStore();toast("Предпочтение сохранено")});$("globalSources").addEventListener("change",()=>{saveStore();toast("Предпочтение сохранено")});$("currency").addEventListener("change",()=>{saveStore();toast("Валюта сохранена: "+$("currency").value)});$("showSaved").addEventListener("click",()=>{setPage("jobs");filter="saved";render()});document.addEventListener("click",e=>{if(e.target.closest("#refreshJobs"))loadRemoteJobs()});if(window.lucide)lucide.createIcons();render();loadRemoteJobs();
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "freelance-radar-v2";
+let jobs = [];
+let loading = true;
+let errors = [];
+let filter = "all";
+let page = "jobs";
+let saved = new Set();
+let settings = { remoteOnly: false, currency: "Любая валюта" };
+
+function readStorage() {
+  try {
+    const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    saved = new Set(Array.isArray(value.saved) ? value.saved : []);
+    settings = { ...settings, ...(value.settings || {}) };
+  } catch (_) {}
+  $("remoteOnly").checked = !!settings.remoteOnly;
+  $("currency").value = [...$("currency").options].some(o => o.value === settings.currency || o.text === settings.currency)
+    ? settings.currency : "Любая валюта";
+}
+function saveStorage() {
+  settings.remoteOnly = $("remoteOnly").checked;
+  settings.currency = $("currency").value;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ saved: [...saved], settings })); }
+  catch (_) { toast("Не удалось сохранить настройки в этом браузере"); }
+}
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[char]));
+}
+function toast(message) {
+  $("toast").textContent = message;
+  $("toast").classList.add("show");
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => $("toast").classList.remove("show"), 1800);
+}
+function publishedLabel(value) {
+  if (!value) return "Дата публикации не указана";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Дата публикации не указана";
+  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+  if (minutes < 1) return "Опубликовано только что";
+  if (minutes < 60) return "Опубликовано " + minutes + " мин. назад";
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return "Опубликовано " + hours + " ч. назад";
+  const days = Math.floor(hours / 24);
+  if (days < 30) return "Опубликовано " + days + " дн. назад";
+  return "Опубликовано " + date.toLocaleDateString("ru-RU", { day:"numeric", month:"short", year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined });
+}
+function filteredJobs() {
+  const query = $("search").value.trim().toLocaleLowerCase("ru");
+  return jobs.filter(job => {
+    const haystack = [job.title, job.company, job.desc, ...(job.tags || [])].join(" ").toLocaleLowerCase("ru");
+    if (query && !haystack.includes(query)) return false;
+    if ((filter === "remote" || $("remoteOnly").checked) && !job.remote) return false;
+    if (filter === "saved" && !saved.has(job.id)) return false;
+    return true;
+  });
+}
+function render() {
+  const list = filteredJobs();
+  $("count").textContent = list.length + " вакансий";
+  $("savedCount").textContent = saved.size + " сохранённых вакансий";
+  document.querySelectorAll(".filter").forEach(button => button.classList.toggle("active", button.dataset.filter === filter));
+  if (loading && jobs.length === 0) {
+    $("cards").innerHTML = '<div class="empty"><i data-lucide="loader-circle"></i><strong>Загружаем вакансии</strong>Подключаем открытые источники…</div>';
+  } else if (list.length === 0) {
+    $("cards").innerHTML = '<div class="empty"><i data-lucide="search-x"></i><strong>' + (errors.length && jobs.length === 0 ? "Вакансии пока не загрузились" : "Ничего не найдено") + '</strong>' + (errors.length && jobs.length === 0 ? "Проверь соединение и нажми «Обновить» ниже." : "Измени запрос или фильтр.") + '</div>';
+  } else {
+    $("cards").innerHTML = list.map(job => {
+      const pay = job.pay || "Зарплата не указана";
+      const tags = (job.tags || []).map(tag => '<span class="tag">' + esc(tag) + '</span>').join("");
+      return '<article class="job"><div class="jobtop"><div class="jobicon"><i data-lucide="briefcase-business"></i></div><div class="jobmain"><h3>' + esc(job.title) + '</h3><div class="company">' + esc(job.company) + '</div></div><div class="pay">' + esc(pay) + '</div></div>' +
+        '<p class="desc">' + esc(job.desc || "Описание не предоставлено") + '</p>' +
+        '<div class="jobmeta"><span class="metaitem"><i data-lucide="clock-3"></i>' + esc(publishedLabel(job.published)) + '</span><span class="metaitem"><i data-lucide="messages-square"></i>Отклики: ' + esc(job.responses == null ? "нет данных" : job.responses) + '</span></div>' +
+        (tags ? '<div class="tags">' + tags + '</div>' : '') +
+        '<div class="jobfoot"><span class="source"><i data-lucide="globe-2"></i><a href="' + esc(job.url) + '" target="_blank" rel="noopener noreferrer">' + esc(job.source) + '</a>' + (job.location ? " · " + esc(job.location) : "") + '</span>' +
+        '<button class="save ' + (saved.has(job.id) ? "saved" : "") + '" data-save="' + esc(job.id) + '" aria-label="Сохранить вакансию"><i data-lucide="' + (saved.has(job.id) ? "bookmark-check" : "bookmark") + '"></i></button></div></article>';
+    }).join("");
+  }
+  const successful = jobs.length > 0;
+  const sourceNames = ["Remotive", "Remote OK", "Arbeitnow"];
+  const goodNames = [...new Set(jobs.map(job => job.source))];
+  $("sourceNotice").innerHTML = '<i data-lucide="radio-tower"></i><div><b>' +
+    (loading ? "Загружаем источники…" : (jobs.length + " вакансий из " + goodNames.length + " источников")) +
+    '</b>' + (errors.length ? '<p>' + esc(errors.join(" · ")) + '</p>' : '') +
+    '<button class="action" id="refreshJobs" style="margin-top:9px"><i data-lucide="refresh-cw"></i> Обновить</button></div>';
+  $("settingsSources").textContent = sourceNames.map(name => name + (goodNames.includes(name) ? " — подключён" : errors.some(error => error.startsWith(name + ":")) ? " — ошибка загрузки" : " — пока нет данных")).join(" · ");
+  if (window.lucide) window.lucide.createIcons();
+}
+async function refreshJobs() {
+  loading = true;
+  errors = [];
+  render();
+  try {
+    const result = await loadAllJobs();
+    jobs = result.jobs;
+    errors = result.errors;
+  } catch (error) {
+    errors = [error?.message || "Не удалось загрузить источники"];
+  } finally {
+    loading = false;
+    render();
+  }
+}
+function setPage(nextPage) {
+  page = nextPage;
+  $("jobsPage").classList.toggle("active", page === "jobs");
+  $("settingsPage").classList.toggle("active", page === "settings");
+  document.querySelectorAll(".nav-btn").forEach(button => {
+    const active = button.dataset.page === page;
+    button.classList.toggle("active", active);
+    if (active) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+readStorage();
+document.querySelectorAll(".nav-btn").forEach(button => button.addEventListener("click", () => setPage(button.dataset.page)));
+document.querySelectorAll(".filter").forEach(button => button.addEventListener("click", () => { filter = button.dataset.filter; render(); }));
+$("search").addEventListener("input", render);
+$("cards").addEventListener("click", event => {
+  const button = event.target.closest("[data-save]");
+  if (!button) return;
+  const id = button.dataset.save;
+  if (saved.has(id)) { saved.delete(id); toast("Убрано из избранного"); }
+  else { saved.add(id); toast("Сохранено в избранное"); }
+  saveStorage();
+  render();
+});
+$("remoteOnly").addEventListener("change", () => { saveStorage(); render(); });
+$("currency").addEventListener("change", () => { saveStorage(); toast("Настройка сохранена"); });
+$("showSaved").addEventListener("click", () => { filter = "saved"; setPage("jobs"); render(); });
+document.addEventListener("click", event => { if (event.target.closest("#refreshJobs")) refreshJobs(); });
+if (window.lucide) window.lucide.createIcons();
+render();
+refreshJobs();
