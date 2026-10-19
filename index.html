@@ -1,19 +1,54 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1020"><meta name="description" content="Freelance Radar — поиск вакансий и фриланс-заказов"><title>Freelance Radar</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="./css/app.css"><script src="https://unpkg.com/lucide@latest"></script></head><body><main class="wrap">
-<header class="top"><div class="logo"><i data-lucide="radar"></i></div><div><h1>Freelance Radar</h1><div class="sub">Работа и заказы — в одном месте</div></div><span class="beta">BETA</span></header>
-<section class="hero"><div class="eyebrow"><i data-lucide="sparkles"></i> Твой следующий шаг</div><h2>Хорошие возможности<br>не должны теряться.</h2><p>Собирай интересные вакансии и проекты. Сохраняй то, что подходит именно тебе.</p><div class="hero-foot"><i data-lucide="shield-check"></i> Отдельные ленты · Поиск · Избранное</div></section>
-<section class="page active" id="jobsPage"><div class="section-head"><div><h2 id="listTitle">Вакансии</h2><p id="listSubtitle">Найди работу, которая подходит тебе</p></div><span class="count" id="count">0 предложений</span></div>
-<div class="searchbox"><i data-lucide="search"></i><input class="search" id="search" type="search" placeholder="Должность, навык или компания…" aria-label="Поиск"></div>
-<div class="filters"><button class="filter active" data-filter="all">Все предложения</button><button class="filter" data-filter="remote"><i data-lucide="wifi" style="width:12px;height:12px;vertical-align:-2px"></i> Удалённо</button><button class="filter" data-filter="saved"><i data-lucide="bookmark" style="width:12px;height:12px;vertical-align:-2px"></i> Избранное</button></div>
-<div class="cards" id="cards" aria-live="polite"></div><aside class="notice" id="sourceNotice"><i data-lucide="radio-tower"></i><div><b>Подключаем источник…</b> Получаем вакансии из Remotive. Объявления могут публиковаться с задержкой до 24 часов.</div></aside></section>
-<section class="page" id="settingsPage"><div class="section-head"><div><h2>Настройки</h2><p>Подстрой поиск под себя</p></div><span class="count">Персонально</span></div>
-<div class="settings-card"><h3>Предпочтения поиска</h3><p>Параметры для будущей ленты предложений.</p><div class="setting"><div><div class="setting-label">Только удалённая работа</div><div class="hint">Скрывать офисные предложения</div></div><input class="switch" type="checkbox" id="remoteOnly"></div><div class="setting"><div><div class="setting-label">Русскоязычные источники</div><div class="hint">Проекты и вакансии на русском</div></div><input class="switch" type="checkbox" checked id="ruSources"></div><div class="setting"><div><div class="setting-label">Международные источники</div><div class="hint">Предложения со всего мира</div></div><input class="switch" type="checkbox" checked id="globalSources"></div><div class="setting"><div><div class="setting-label">Валюта бюджета</div><div class="hint">Для зарплат и ставок</div></div><select class="select" id="currency"><option>Евро (€)</option><option>Доллары ($)</option><option>Рубли (₽)</option><option>Любая валюта</option></select></div></div>
-<div class="settings-card"><h3>Твои сохранения</h3><p id="savedCount">0 в избранном</p><button class="action" id="showSaved"><i data-lucide="bookmark-check"></i> Посмотреть избранное</button></div>
-<div class="settings-card"><h3>О Freelance Radar</h3><p>Первая мобильная версия. Здесь появятся подключённые источники, уведомления и профиль навыков.</p><div class="setting"><div><div class="setting-label">Статус приложения</div><div class="hint">Интерфейс готов к подключению данных</div></div><span class="count">BETA</span></div></div>
-<aside class="notice"><i data-lucide="lightbulb"></i><div><b>Важно:</b> настройки пока сохраняют предпочтения только в текущем интерфейсе. Подключение реальных источников — следующий этап.</div></aside></section>
-<div class="footer">Freelance Radar · удобно с телефона</div></main>
-<nav class="bottom-nav" aria-label="Основная навигация"><button class="nav-btn active" data-page="jobs" data-kind="vacancy" aria-current="page"><i data-lucide="briefcase-business"></i><span>Вакансии</span></button><button class="nav-btn" data-page="jobs" data-kind="freelance"><i data-lucide="zap"></i><span>Фриланс</span></button><button class="nav-btn" data-page="settings"><i data-lucide="settings-2"></i><span>Настройки</span></button></nav><div class="toast" id="toast" role="status"></div>
-<script type="module" src="./js/app.js"></script></body></html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="description" content="Поиск вакансий из нескольких открытых источников">
+<title>Freelance Radar — вакансии</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/app.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div class="logo"><i data-lucide="radar"></i></div>
+    <div><h1>Freelance Radar</h1><div class="sub">Поиск вакансий</div></div>
+  </header>
+
+  <section class="page active" id="jobsPage">
+    <div class="section-head">
+      <div><h2>Вакансии</h2><p>Объявления из нескольких источников</p></div>
+      <span class="count" id="count">Загрузка…</span>
+    </div>
+    <div class="searchbox"><i data-lucide="search"></i><input class="search" id="search" type="search" placeholder="Должность, навык или компания…" aria-label="Поиск вакансий"></div>
+    <div class="filters">
+      <button class="filter active" data-filter="all">Все вакансии</button>
+      <button class="filter" data-filter="remote"><i data-lucide="wifi" style="width:12px;height:12px;vertical-align:-2px"></i> Удалённо</button>
+      <button class="filter" data-filter="saved"><i data-lucide="bookmark" style="width:12px;height:12px;vertical-align:-2px"></i> Избранное</button>
+    </div>
+    <div class="cards" id="cards" aria-live="polite"></div>
+    <aside class="notice" id="sourceNotice" aria-live="polite"><i data-lucide="radio-tower"></i><div>Подключаем источники вакансий…</div></aside>
+  </section>
+
+  <section class="page" id="settingsPage">
+    <div class="section-head"><div><h2>Настройки</h2><p>Предпочтения поиска</p></div></div>
+    <div class="settings-card">
+      <div class="setting"><div><div class="setting-label">Только удалённая работа</div><div class="hint">Скрывать вакансии без удалённого формата</div></div><input class="switch" type="checkbox" id="remoteOnly"></div>
+      <div class="setting"><div><div class="setting-label">Валюта зарплаты</div><div class="hint">Отображение предпочтительной валюты</div></div><select class="select" id="currency"><option>Любая валюта</option><option>Евро (€)</option><option>Доллары ($)</option><option>Рубли (₽)</option></select></div>
+    </div>
+    <div class="settings-card"><h3>Избранное</h3><p id="savedCount">0 сохранённых вакансий</p><button class="action" id="showSaved"><i data-lucide="bookmark-check"></i> Показать избранное</button></div>
+    <div class="settings-card"><h3>Источники данных</h3><p id="settingsSources">Загружаем состояние источников…</p></div>
+  </section>
+  <div class="footer">Freelance Radar</div>
+</main>
+<nav class="bottom-nav" aria-label="Основная навигация">
+  <button class="nav-btn active" data-page="jobs" aria-current="page"><i data-lucide="briefcase-business"></i><span>Вакансии</span></button>
+  <button class="nav-btn" data-page="settings"><i data-lucide="settings-2"></i><span>Настройки</span></button>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
