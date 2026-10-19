@@ -22,7 +22,8 @@
     │       └── sources/
     │           ├── remotive.js
     │           ├── remoteok.js
-    │           └── arbeitnow.js
+    │           ├── arbeitnow.js
+│           └── themuse.js
     ├── docs/
     │   └── ARCHITECTURE.md
     └── README.md
@@ -36,6 +37,7 @@
 - js/services/sources/remotive.js — загрузчик Remotive.
 - js/services/sources/remoteok.js — загрузчик Remote OK.
 - js/services/sources/arbeitnow.js — загрузчик Arbeitnow.
+- js/services/sources/themuse.js — загрузчик The Muse.
 - docs/ARCHITECTURE.md — схема потока данных, ограничения и план backend.
 
 ## Как менять проект
@@ -51,8 +53,9 @@
 1. Remotive: https://remotive.com/api/remote-jobs?limit=100
 2. Remote OK: https://remoteok.com/api
 3. Arbeitnow: https://www.arbeitnow.com/api/job-board-api
+4. The Muse: https://www.themuse.com/api/public/jobs?page=0&descending=true
 
-Все три — публичные API без ключа, но это не все вакансии интернета. У других сайтов могут быть закрытые/платные API, ограничения на перепубликацию или отсутствие доступа из браузера. У каждого источника есть отдельный адаптер, а ошибка одного не должна мешать двум другим. Ссылку на оригинальное объявление и название источника нужно сохранять в карточке. Для Remotive данные могут задерживаться примерно на 24 часа; обновлять этот API слишком часто не нужно.
+Все четыре — публичные API без ключа, но это не все вакансии интернета. У других сайтов могут быть закрытые/платные API, ограничения на перепубликацию или отсутствие доступа из браузера. У каждого источника есть отдельный адаптер, а ошибка одного не должна мешать двум другим. Ссылку на оригинальное объявление и название источника нужно сохранять в карточке. Для Remotive данные могут задерживаться примерно на 24 часа; обновлять этот API слишком часто не нужно.
 
 ## Модель вакансии
 
