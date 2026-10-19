@@ -8,7 +8,7 @@ let errors = [];
 let filter = "all";
 let page = "jobs";
 let saved = new Set();
-let settings = { remoteOnly: false, currency: "Любая валюта" };
+let settings = { remoteOnly: false };
 
 function readStorage() {
   try {
@@ -17,12 +17,9 @@ function readStorage() {
     settings = { ...settings, ...(value.settings || {}) };
   } catch (_) {}
   $("remoteOnly").checked = !!settings.remoteOnly;
-  $("currency").value = [...$("currency").options].some(o => o.value === settings.currency || o.text === settings.currency)
-    ? settings.currency : "Любая валюта";
 }
 function saveStorage() {
   settings.remoteOnly = $("remoteOnly").checked;
-  settings.currency = $("currency").value;
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ saved: [...saved], settings })); }
   catch (_) { toast("Не удалось сохранить настройки в этом браузере"); }
 }
@@ -82,7 +79,7 @@ function render() {
     }).join("");
   }
   const successful = jobs.length > 0;
-  const sourceNames = ["Remotive", "Remote OK", "Arbeitnow"];
+  const sourceNames = ["Remotive", "Remote OK", "Arbeitnow", "The Muse"];
   const goodNames = [...new Set(jobs.map(job => job.source))];
   $("sourceNotice").innerHTML = '<i data-lucide="radio-tower"></i><div><b>' +
     (loading ? "Загружаем источники…" : (jobs.length + " вакансий из " + goodNames.length + " источников")) +
@@ -132,7 +129,6 @@ $("cards").addEventListener("click", event => {
   render();
 });
 $("remoteOnly").addEventListener("change", () => { saveStorage(); render(); });
-$("currency").addEventListener("change", () => { saveStorage(); toast("Настройка сохранена"); });
 $("showSaved").addEventListener("click", () => { filter = "saved"; setPage("jobs"); render(); });
 document.addEventListener("click", event => { if (event.target.closest("#refreshJobs")) refreshJobs(); });
 if (window.lucide) window.lucide.createIcons();
