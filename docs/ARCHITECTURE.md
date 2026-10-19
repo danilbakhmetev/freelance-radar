@@ -8,7 +8,7 @@
 
 1. index.html загружает css/app.css и js/app.js.
 2. js/app.js вызывает loadAllJobs().
-3. js/services/job-service.js запускает три адаптера параллельно через Promise.allSettled.
+3. js/services/job-service.js запускает четыре адаптера параллельно через Promise.allSettled.
 4. Каждый адаптер получает JSON и преобразует записи в общую модель через normalizeJob().
 5. Сервис убирает дубликаты и сортирует вакансии по дате публикации.
 6. UI показывает карточки, время публикации, источник и ссылку на оригинал. Отклики показываются только если они доступны из API; сейчас число откликов у источников отсутствует.
@@ -18,6 +18,7 @@
 - Remotive: https://remotive.com/api/remote-jobs?limit=100
 - Remote OK: https://remoteok.com/api
 - Arbeitnow: https://www.arbeitnow.com/api/job-board-api
+- The Muse: https://www.themuse.com/api/public/jobs?page=0&descending=true
 
 Условия использования, доступность и CORS могут меняться. В карточке обязательно оставлять источник и оригинальную ссылку. Публичные источники не означают полный охват всех сайтов с вакансиями.
 
