@@ -1,11 +1,13 @@
 import { fetchRemotiveJobs } from "./sources/remotive.js";
 import { fetchRemoteOKJobs } from "./sources/remoteok.js";
 import { fetchArbeitnowJobs } from "./sources/arbeitnow.js";
+import { fetchTheMuseJobs } from "./sources/themuse.js";
 
 const SOURCES = [
   { name: "Remotive", fetch: fetchRemotiveJobs },
   { name: "Remote OK", fetch: fetchRemoteOKJobs },
-  { name: "Arbeitnow", fetch: fetchArbeitnowJobs }
+  { name: "Arbeitnow", fetch: fetchArbeitnowJobs },
+  { name: "The Muse", fetch: fetchTheMuseJobs }
 ];
 
 export async function loadAllJobs() {
